@@ -152,10 +152,11 @@ public class DbAdapter {
         return count;
     }
 
-    public long insertUser(String email, String name, String account, String chores, String goal) {
+    public long insertUser(String email, String pin, String name, String account, String chores, String goal) {
         SQLiteDatabase db = userDbHelper.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(userDbHelper.EMAIL, email);
+        contentValues.put(userDbHelper.PIN, pin);
         contentValues.put(userDbHelper.NAME, name);
         contentValues.put(userDbHelper.ACCOUNT, account);
         contentValues.put(userDbHelper.CHORES, chores);
@@ -167,10 +168,12 @@ public class DbAdapter {
     public User getUserData(String id)
     {
         SQLiteDatabase db = userDbHelper.getWritableDatabase();
-        String[] columns = {userDbHelper.UID,userDbHelper.NAME,userDbHelper.ACCOUNT,userDbHelper.CHORES,userDbHelper.GOAL};
+        String[] columns = {userDbHelper.UID,userDbHelper.PIN,userDbHelper.NAME,
+                userDbHelper.ACCOUNT,userDbHelper.CHORES,userDbHelper.GOAL};
         Cursor cursor =db.query(userDbHelper.TABLE_NAME,columns,userDbHelper.UID + "=" + id,
                 null,null,null,null);
         String email = cursor.getString(cursor.getColumnIndex(userDbHelper.EMAIL));
+        String pin = cursor.getString(cursor.getColumnIndex(userDbHelper.PIN));
         String name =cursor.getString(cursor.getColumnIndex(userDbHelper.NAME));
         String account = cursor.getString(cursor.getColumnIndex(userDbHelper.ACCOUNT));
         String chores = cursor.getString(cursor.getColumnIndex(userDbHelper.CHORES));
@@ -184,7 +187,7 @@ public class DbAdapter {
         }
         Goal userGoal = getGoalData(goal);
 
-        return new User(email, name, userAccount, userChores, userGoal);
+        return new User(email, pin, name, userAccount, userChores, userGoal);
     }
 
     public int deleteUser(String id)
@@ -192,7 +195,7 @@ public class DbAdapter {
         SQLiteDatabase db = choreDbHelper.getWritableDatabase();
         String[] whereArgs ={id};
 
-        int count =db.delete(userDbHelper.TABLE_NAME ,userDbHelper.UID+" = ?",whereArgs);
+        int count = db.delete(userDbHelper.TABLE_NAME ,userDbHelper.UID+" = ?",whereArgs);
         return  count;
     }
 
@@ -204,17 +207,17 @@ public class DbAdapter {
         contentValues.put(userDbHelper.CHORES,chores);
         contentValues.put(userDbHelper.GOAL,goal);
         String[] whereArgs= {id};
-        int count =db.update(userDbHelper.TABLE_NAME,contentValues, userDbHelper.UID+" = ?",whereArgs );
+        int count = db.update(userDbHelper.TABLE_NAME,contentValues, userDbHelper.UID+" = ?",whereArgs );
         return count;
     }
 
     static class AccountDbHelper extends SQLiteOpenHelper
     {
-        private static final String DATABASE_NAME = "myDatabase";    // Database Name
-        private static final String TABLE_NAME = "Account";   // Table Name
-        private static final int DATABASE_Version = 1;    // Database Version
-        private static final String UID="id";     // Column I (Primary Key)
-        private static final String BALANCE = "balance";    //Column II
+        private static final String DATABASE_NAME = "pocketPiggyDatabase";
+        private static final String TABLE_NAME = "Account";
+        private static final int DATABASE_Version = 1;
+        private static final String UID="id";
+        private static final String BALANCE = "balance";
         private static final String CREATE_TABLE = "CREATE TABLE "+TABLE_NAME+
                 " ("+UID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+BALANCE+" VARCHAR(255));";
         private static final String DROP_TABLE ="DROP TABLE IF EXISTS "+TABLE_NAME;
@@ -247,11 +250,11 @@ public class DbAdapter {
 
     static class GoalDbHelper extends SQLiteOpenHelper
     {
-        private static final String DATABASE_NAME = "myDatabase";    // Database Name
-        private static final String TABLE_NAME = "Goal";   // Table Name
-        private static final int DATABASE_Version = 1;    // Database Version
-        private static final String UID="id";     // Column I (Primary Key)
-        private static final String NAME = "name";    //Column II
+        private static final String DATABASE_NAME = "pocketPiggyDatabase";
+        private static final String TABLE_NAME = "Goal";
+        private static final int DATABASE_Version = 1;
+        private static final String UID="id";
+        private static final String NAME = "name";
         private static final String AMOUNT_SAVED = "amount_saved";
         private static final String TOTAL_AMOUNT = "total_amount";
         private static final String IS_REACHED = "is_reached";
@@ -288,11 +291,11 @@ public class DbAdapter {
 
     static class ChoreDbHelper extends SQLiteOpenHelper
     {
-        private static final String DATABASE_NAME = "myDatabase";    // Database Name
-        private static final String TABLE_NAME = "Chore";   // Table Name
-        private static final int DATABASE_Version = 1;    // Database Version
-        private static final String UID="id";     // Column I (Primary Key)
-        private static final String TITLE = "title";    //Column II
+        private static final String DATABASE_NAME = "pocketPiggyDatabase";
+        private static final String TABLE_NAME = "Chore";
+        private static final int DATABASE_Version = 1;
+        private static final String UID="id";
+        private static final String TITLE = "title";
         private static final String DETAILS = "details";
         private static final String AMOUNT = "amount";
         private static final String IS_ACCOMPLISHED = "is_accomplished";
@@ -329,18 +332,20 @@ public class DbAdapter {
 
     static class UserDbHelper extends SQLiteOpenHelper
     {
-        private static final String DATABASE_NAME = "myDatabase";    // Database Name
-        private static final String TABLE_NAME = "User";   // Table Name
-        private static final int DATABASE_Version = 1;    // Database Version
-        private static final String UID="id";     // Column I (Primary Key)
+        private static final String DATABASE_NAME = "pocketPiggyDatabase";
+        private static final String TABLE_NAME = "User";
+        private static final int DATABASE_Version = 1;
+        private static final String UID="id";
         private static final String EMAIL = "email";
-        private static final String NAME = "name";    //Column II
+        private static final String PIN = "pin";
+        private static final String NAME = "name";
         private static final String ACCOUNT = "account";
         private static final String CHORES = "chores";
         private static final String GOAL = "goal";
-        private static final String CREATE_TABLE = "CREATE TABLE "+TABLE_NAME+
-                " ("+UID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+NAME+" VARCHAR(255) ," + ACCOUNT +
-                " VARCHAR(255) ," + CHORES + " VARCHAR(255) ," + GOAL + " VARCHAR(255));";
+        private static final String CREATE_TABLE = "CREATE TABLE "+ TABLE_NAME +
+                " ("+UID+" INTEGER PRIMARY KEY AUTOINCREMENT, " + EMAIL + " VARCHAR(255) ," + PIN +
+                " VARCHAR(255) ," + NAME + " VARCHAR(255) ," + ACCOUNT + " VARCHAR(255) ," + CHORES +
+                " VARCHAR(255) ," + GOAL + " VARCHAR(255));";
         private static final String DROP_TABLE ="DROP TABLE IF EXISTS "+TABLE_NAME;
         private Context context;
 
