@@ -1,12 +1,21 @@
 package com.example.pocketpiggy;
 
+
+import java.util.*;
+
 public class User {
-    String name;
     String id;
+    String name;
+    Account account;
+    List<Chore> chores;
+    Goal goal;
 
     public User(String id, String name) {
         this.id = id;
         this.name = name;
+        this.account = new Account();
+        this.chores = new ArrayList<Chore>();
+        this.goal = null;
     }
 
     public String getId() {
@@ -15,5 +24,42 @@ public class User {
 
     public String getName() {
         return this.name;
+    }
+
+    public Account getAccount() {
+        return this.account;
+    }
+
+    public List<Chore> getChores() {
+        return this.chores;
+    }
+
+    public Goal getGoal() {
+        return this.goal;
+    }
+
+    public void setGoal(String name, double totalAmount) {
+        this.goal = new Goal(name, totalAmount);
+    }
+
+    public void assignChore(String title, String details, double amount) {
+        Chore chore = new Chore(title, details, amount);
+        this.chores.add(chore);
+    }
+
+    public void giveAllowance(double val) {
+        this.account.addBalance(val);
+    }
+
+    public void addSavings(double val) {
+        this.goal.addSaving(val);
+        this.account.withdrawBalance(val);
+    }
+
+    public void doChore(String choreName) {
+        for (int i = 0; i < this.chores.size(); i++)
+        {
+            if (chores.get(i).getTitle().equals(choreName)) chores.get(i).setAccomplished();
+        }
     }
 }
