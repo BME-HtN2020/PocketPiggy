@@ -5,17 +5,26 @@ import java.util.*;
 
 public class User {
     String id;
+    String email;
     String name;
     Account account;
     List<Chore> chores;
     Goal goal;
 
-    public User(String id, String name) {
-        this.id = id;
+    public User(String email, String name) {
+        this.email = email;
         this.name = name;
         this.account = new Account();
         this.chores = new ArrayList<Chore>();
         this.goal = null;
+    }
+
+    public User(String email, String name, Account account, List<Chore> chores, Goal goal) {
+        this.email = email;
+        this.name = name;
+        this.account = account;
+        this.chores = chores;
+        this.goal = goal;
     }
 
     public String getId() {

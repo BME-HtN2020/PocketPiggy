@@ -27,11 +27,7 @@ public class Account {
         this.balance -= balance;
     }
 
-    public String formatter() {
-        double a = this.balance * 100;
-        int b = (int)a;
-        double c = (double)b / 100;
-        if (b % 10 == 0) return "$" + c + "0";
-        else return "$" + c;
+    public String toString() {
+        return PriceFormatter.format(this.balance);
     }
 }

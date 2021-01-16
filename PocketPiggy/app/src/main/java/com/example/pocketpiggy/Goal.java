@@ -8,9 +8,16 @@ public class Goal {
 
     public Goal(String name, double totalAmount) {
         this.name = name;
-        this.totalAmount = totalAmount;
         this.amountSaved = 0;
+        this.totalAmount = totalAmount;
         this.isReached = false;
+    }
+
+    public Goal(String name, double amountSaved, double totalAmount, boolean isReached) {
+        this.name = name;
+        this.amountSaved = amountSaved;
+        this.totalAmount = totalAmount;
+        this.isReached = isReached;
     }
 
     public String getName() {

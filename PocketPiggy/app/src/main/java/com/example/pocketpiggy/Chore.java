@@ -13,6 +13,13 @@ public class Chore {
         this.isAccomplished = false;
     }
 
+    public Chore(String title, String details, double amount, boolean isAccomplished) {
+        this.title = title;
+        this.details = details;
+        this.amount = amount;
+        this.isAccomplished = isAccomplished;
+    }
+
     public String getTitle() {
         return this.title;
     }
