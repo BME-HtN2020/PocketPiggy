@@ -61,13 +61,13 @@ public class DbAdapter {
         return count;
     }
 
-    public long insertGoal(String name, String amountSaved, String totalAmount, String isReached) {
+    public long insertGoal(String name, String totalAmount) {
         SQLiteDatabase db = goalDbHelper.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(goalDbHelper.NAME, name);
-        contentValues.put(goalDbHelper.AMOUNT_SAVED, amountSaved);
+        contentValues.put(goalDbHelper.AMOUNT_SAVED, "$0.00");
         contentValues.put(goalDbHelper.TOTAL_AMOUNT, totalAmount);
-        contentValues.put(goalDbHelper.IS_REACHED, isReached);
+        contentValues.put(goalDbHelper.IS_REACHED, "false");
         long id = db.insert(goalDbHelper.TABLE_NAME, null , contentValues);
         return id;
     }
@@ -97,24 +97,25 @@ public class DbAdapter {
         return  count;
     }
 
-    public int updateGoal(String id, String amountSaved, String isReached)
+    public int updateGoal(String id, String amountSaved, String totalAmount, String isReached)
     {
         SQLiteDatabase db = goalDbHelper.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(goalDbHelper.AMOUNT_SAVED,amountSaved);
+        contentValues.put(goalDbHelper.TOTAL_AMOUNT,totalAmount);
         contentValues.put(goalDbHelper.IS_REACHED, isReached);
         String[] whereArgs= {id};
         int count =db.update(goalDbHelper.TABLE_NAME,contentValues, goalDbHelper.UID+" = ?",whereArgs );
         return count;
     }
 
-    public long insertChore(String title, String details, String amount, String isAccomplished) {
+    public long insertChore(String title, String details, String amount) {
         SQLiteDatabase db = choreDbHelper.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(choreDbHelper.TITLE, title);
         contentValues.put(choreDbHelper.DETAILS, details);
         contentValues.put(choreDbHelper.AMOUNT, amount);
-        contentValues.put(choreDbHelper.IS_ACCOMPLISHED, isAccomplished);
+        contentValues.put(choreDbHelper.IS_ACCOMPLISHED, "false");
         long id = db.insert(choreDbHelper.TABLE_NAME, null , contentValues);
         return id;
     }
@@ -152,22 +153,26 @@ public class DbAdapter {
         return count;
     }
 
-    public long insertUser(String email, String pin, String name, String account, String chores, String goal) {
+    public long insertUser(String email, String pin, String name) {
         SQLiteDatabase db = userDbHelper.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(userDbHelper.EMAIL, email);
         contentValues.put(userDbHelper.PIN, pin);
         contentValues.put(userDbHelper.NAME, name);
-        contentValues.put(userDbHelper.ACCOUNT, account);
-        contentValues.put(userDbHelper.CHORES, chores);
-        contentValues.put(userDbHelper.GOAL, goal);
+
+        long accountId = insertAccountData();
+
+        contentValues.put(userDbHelper.ACCOUNT, accountId);
+        contentValues.put(userDbHelper.CHORES, "");
+        contentValues.put(userDbHelper.GOAL, "");
+
         long id = db.insert(userDbHelper.TABLE_NAME, null , contentValues);
         return id;
     }
 
     public User getUserData(String id)
     {
-        SQLiteDatabase db = userDbHelper.getWritableDatabase();
+        SQLiteDatabase db = userDbHelper.getReadableDatabase();
         String[] columns = {userDbHelper.UID,userDbHelper.PIN,userDbHelper.NAME,
                 userDbHelper.ACCOUNT,userDbHelper.CHORES,userDbHelper.GOAL};
         Cursor cursor =db.query(userDbHelper.TABLE_NAME,columns,userDbHelper.UID + "=" + id,
@@ -190,10 +195,73 @@ public class DbAdapter {
         return new User(email, pin, name, userAccount, userChores, userGoal);
     }
 
+    public String getUserAccountId(String id) {
+        SQLiteDatabase db = userDbHelper.getReadableDatabase();
+        String[] columns = {userDbHelper.ACCOUNT};
+
+        Cursor cursor = db.query(userDbHelper.TABLE_NAME, columns, userDbHelper.UID+"="+id,
+                null, null, null, null);
+        String account = cursor.getString(cursor.getColumnIndex(userDbHelper.ACCOUNT));
+
+        return account;
+    }
+
+    public String getUserChoresId(String id) {
+        SQLiteDatabase db = userDbHelper.getReadableDatabase();
+        String[] columns = {userDbHelper.CHORES};
+
+        Cursor cursor = db.query(userDbHelper.TABLE_NAME, columns, userDbHelper.UID+"="+id,
+                null, null, null, null);
+        String chores = cursor.getString(cursor.getColumnIndex(userDbHelper.CHORES));
+
+        return chores;
+    }
+
+    public String getUserGoalId(String id) {
+        SQLiteDatabase db = userDbHelper.getReadableDatabase();
+        String[] columns = {userDbHelper.GOAL};
+
+        Cursor cursor = db.query(userDbHelper.TABLE_NAME, columns, userDbHelper.UID+"="+id,
+                null, null, null, null);
+        String goal = cursor.getString(cursor.getColumnIndex(userDbHelper.GOAL));
+
+        return goal;
+    }
+
     public int deleteUser(String id)
     {
         SQLiteDatabase db = choreDbHelper.getWritableDatabase();
         String[] whereArgs ={id};
+
+        String accountId = getUserAccountId(id);
+        String choresId = getUserChoresId(id);
+        String goalId = getUserGoalId(id);
+
+        if (!accountId.isEmpty()) {
+            int accountDeleteResult = deleteAccount(accountId);
+            if (accountDeleteResult == 0) {
+                // some kind of error occurred when deleting the account
+                return 0;
+            }
+        }
+        if (!choresId.isEmpty()) {
+            String[] choresIds = DataWrapper.unwrap(choresId);
+            for (int i = 0; i < choresIds.length; i++) {
+                int choreDeleteResult = deleteChore(choresIds[i]);
+                if (choreDeleteResult == 0) {
+                    // some kind of error occurred when deleting the chore
+                    // implement logic to add the deleted account back in
+                    return 0;
+                }
+            }
+        }
+        if (!goalId.isEmpty()) {
+            int goalDeleteResult = deleteGoal(goalId);
+            if (goalDeleteResult == 0) {
+                // some kind of error occurred when deleting the goal
+                return 0;
+            }
+        }
 
         int count = db.delete(userDbHelper.TABLE_NAME ,userDbHelper.UID+" = ?",whereArgs);
         return  count;
@@ -205,6 +273,26 @@ public class DbAdapter {
         ContentValues contentValues = new ContentValues();
         contentValues.put(userDbHelper.ACCOUNT,account);
         contentValues.put(userDbHelper.CHORES,chores);
+        contentValues.put(userDbHelper.GOAL,goal);
+        String[] whereArgs= {id};
+        int count = db.update(userDbHelper.TABLE_NAME,contentValues, userDbHelper.UID+" = ?",whereArgs );
+        return count;
+    }
+
+    // called when a new chore is added or when a chore is deleted
+    public int updateUserChores(String id, String chores) {
+        SQLiteDatabase db = userDbHelper.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(userDbHelper.CHORES,chores);
+        String[] whereArgs= {id};
+        int count = db.update(userDbHelper.TABLE_NAME,contentValues, userDbHelper.UID+" = ?",whereArgs );
+        return count;
+    }
+
+    // called when a new goal is added or when a goal is deleted
+    public int updateUserGoal(String id, String goal) {
+        SQLiteDatabase db = userDbHelper.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
         contentValues.put(userDbHelper.GOAL,goal);
         String[] whereArgs= {id};
         int count = db.update(userDbHelper.TABLE_NAME,contentValues, userDbHelper.UID+" = ?",whereArgs );

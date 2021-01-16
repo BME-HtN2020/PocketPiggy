@@ -12,4 +12,8 @@ public class DataWrapper {
     public static String[] unwrap(String dataEntry) {
         return dataEntry.split(";");
     }
+
+    public static String pack(String originalEntry, String newData) {
+        return originalEntry + newData;
+    }
 }
